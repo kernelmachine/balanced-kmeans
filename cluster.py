@@ -34,7 +34,7 @@ if __name__ == '__main__':
     
     for batch in batchify(X, n=100):
         cluster_ids_x, cluster_centers = kmeans(
-            X=batch, num_clusters=num_clusters, distance='cosine', device=device,  balanced=False
+            X=batch, num_clusters=num_clusters, distance='euclidean', device=device,  balanced=True
         )
     cluster_ids_y = kmeans_predict(
         y, cluster_centers, 'cosine', device=device
