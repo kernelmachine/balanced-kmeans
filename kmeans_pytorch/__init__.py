@@ -97,13 +97,13 @@ def kmeans(
             distance_matrix = pairwise_distance_function(X, centers)
             
             # SCIPY LINEAR ASSIGNMENT SOLVER
-            cluster_assignments = linear_sum_assignment(-distance_matrix.cpu().numpy(), maximize=True)[1] // (X.shape[0] // num_clusters)   
-            cluster_assignments = torch.IntTensor(cluster_assignments).cuda()
-            
+            # cluster_assignments = linear_sum_assignment(-distance_matrix.cpu().numpy(), maximize=True)[1] // (X.shape[0] // num_clusters)   
+            # cluster_assignments = torch.IntTensor(cluster_assignments).cuda()
+
             ## BASE LAYER ASSIGNMENT
-            # balanced_assignments = cpp.balanced_assignment(-distance_matrix)
-            # cluster = torch.arange(num_clusters).repeat_interleave(X.shape[0] // num_clusters).to(device)
-            # cluster_assigments = cluster[balanced_assignments]
+            balanced_assignments = cpp.balanced_assignment(-distance_matrix)
+            cluster = torch.arange(num_clusters).repeat_interleave(X.shape[0] // num_clusters).to(device)
+            cluster_assignments = cluster[balanced_assignments]
 
             
         else:

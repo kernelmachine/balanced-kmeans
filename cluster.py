@@ -91,7 +91,7 @@ if __name__ == '__main__':
     cpp = load_cpp()
 
     cluster_ids_x, cluster_centers = kmeans(
-        X=X, num_clusters=num_clusters, distance='euclidean', device=device, iter_limit=1000, balanced=balanced
+        X=X, num_clusters=num_clusters, distance='euclidean', device=device, iter_limit=100, balanced=balanced
     )
 
 
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     # cluster_ids_y, kmeans = get_clusters(y,  cluster_size=n_samples // num_clusters, predict=True, kmeans=kmeans, balanced=True)
 
 
-    plot_blobs(y, cluster_centers, cluster_ids_y, "balanced_clusters.pdf")
+    plot_blobs(y, cluster_centers, cluster_ids_y, "balanced_clusters_base.pdf")
     cx = pd.Series(cluster_ids_y)
     cx = cx.value_counts().sort_index()
 
