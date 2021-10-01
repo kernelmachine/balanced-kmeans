@@ -97,10 +97,7 @@ def kmeans(
     done=False
     while True:
         if balanced:
-            centers = initial_state
-            centers = centers.reshape(-1, 1, X.shape[-1]).repeat_interleave(X.shape[0] // num_clusters, 1).reshape(-1, X.shape[-1])
-            distance_matrix = pairwise_distance_function(X, centers)
-            # from fairseq import pdb; pdb.set_trace()
+            distance_matrix = pairwise_distance_function(X, initial_state).repeat_interleave(X.shape[0] // num_clusters, 1)
             # SCIPY LINEAR ASSIGNMENT SOLVER
             # cluster_assignments = linear_sum_assignment(-distance_matrix.cpu().numpy(), maximize=True)[1] // (X.shape[0] // num_clusters)   
             # cluster_assignments = torch.IntTensor(cluster_assignments).cuda()
