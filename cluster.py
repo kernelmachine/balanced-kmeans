@@ -71,13 +71,13 @@ def load_cpp():
 
 
 if __name__ == '__main__':
-    seed = 234
-    num_clusters = 10
+    seed = 235
+    num_clusters = 5
     balanced = True
     # set random seed
     np.random.seed(seed)
 
-    n_samples = 1000
+    n_samples = 10000
     
     blobs = datasets.make_blobs(n_samples=n_samples, random_state=seed, centers=[[1, 1], [-1, -1], [1, -1]], cluster_std=0.6)
 
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     cpp = load_cpp()
 
     cluster_ids_x, cluster_centers = kmeans(
-        X=X, num_clusters=num_clusters, distance='euclidean', device=device, iter_limit=100, balanced=balanced
+        X=X, num_clusters=num_clusters, distance='euclidean', device=device, iter_limit=1000, balanced=balanced
     )
 
 
@@ -108,11 +108,11 @@ if __name__ == '__main__':
     # cluster_ids_y, kmeans = get_clusters(y,  cluster_size=n_samples // num_clusters, predict=True, kmeans=kmeans, balanced=True)
 
 
-    plot_blobs(y, cluster_centers, cluster_ids_y, "balanced_clusters_base.pdf")
+    plot_blobs(y, cluster_centers, cluster_ids_y, "balanced_clusters.pdf")
     cx = pd.Series(cluster_ids_y)
     cx = cx.value_counts().sort_index()
 
-    cluster_ids_x, kmeans = get_clusters(X, predict=False, kmeans=KMeans(n_clusters=8), balanced=False)
+    cluster_ids_x, kmeans = get_clusters(X, predict=False, kmeans=KMeans(n_clusters=num_clusters), balanced=False)
 
 
 

@@ -25,12 +25,16 @@ def load_cpp():
 
     return libbase
 
+def batchify(a, n=2):
+    for i in np.array_split(a, n, axis=0):
+        yield i
+
 def kmeans(
         X,
         num_clusters,
         distance='euclidean',
         cluster_centers=[],
-        tol=1e-4,
+        tol=5e-3,
         tqdm_flag=True,
         iter_limit=0,
         device=torch.device('cpu'),
@@ -89,24 +93,25 @@ def kmeans(
     iteration = 0
     if tqdm_flag:
         tqdm_meter = tqdm(desc='[running kmeans]')
+    cluster = torch.arange(num_clusters).repeat_interleave(X.shape[0] // num_clusters).to(device)
+    done=False
     while True:
-        dis = pairwise_distance_function(X, initial_state)
         if balanced:
             centers = initial_state
             centers = centers.reshape(-1, 1, X.shape[-1]).repeat_interleave(X.shape[0] // num_clusters, 1).reshape(-1, X.shape[-1])
             distance_matrix = pairwise_distance_function(X, centers)
-            
+            # from fairseq import pdb; pdb.set_trace()
             # SCIPY LINEAR ASSIGNMENT SOLVER
             # cluster_assignments = linear_sum_assignment(-distance_matrix.cpu().numpy(), maximize=True)[1] // (X.shape[0] // num_clusters)   
             # cluster_assignments = torch.IntTensor(cluster_assignments).cuda()
 
             ## BASE LAYER ASSIGNMENT
-            balanced_assignments = cpp.balanced_assignment(-distance_matrix)
-            cluster = torch.arange(num_clusters).repeat_interleave(X.shape[0] // num_clusters).to(device)
+            balanced_assignments = cpp.balanced_assignment(-distance_matrix.T)
             cluster_assignments = cluster[balanced_assignments]
-
+# 
             
         else:
+            dis = pairwise_distance_function(X, initial_state)
             cluster_assignments = torch.argmin(dis, dim=1)
         
         initial_state_pre = initial_state.clone()
@@ -142,6 +147,7 @@ def kmeans(
             break
         if iter_limit != 0 and iteration >= iter_limit:
             break
+            
 
     return cluster_assignments.cpu(), initial_state.cpu()
 
