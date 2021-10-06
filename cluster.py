@@ -12,6 +12,8 @@ from scipy.optimize import linear_sum_assignment
 import numpy as np
 from tqdm.auto import tqdm
 import seaborn as sns
+
+
 def batchify(a, n=2):
     for i in np.array_split(a, n, axis=0):
         yield i
@@ -72,7 +74,7 @@ def load_cpp():
 
 if __name__ == '__main__':
     seed = 235
-    num_clusters = 5
+    num_clusters = 100
     balanced = True
     # set random seed
     np.random.seed(seed)
@@ -108,19 +110,19 @@ if __name__ == '__main__':
     # cluster_ids_y, kmeans = get_clusters(y,  cluster_size=n_samples // num_clusters, predict=True, kmeans=kmeans, balanced=True)
 
 
-    plot_blobs(y, cluster_centers, cluster_ids_y, "balanced_clusters.pdf")
+    # plot_blobs(X, cluster_centers, cluster_ids_x, "balanced_clusters.pdf")
     cx = pd.Series(cluster_ids_y)
     cx = cx.value_counts().sort_index()
 
     cluster_ids_x, kmeans = get_clusters(X, predict=False, kmeans=KMeans(n_clusters=num_clusters), balanced=False)
-
+    
 
 
     
     cluster_ids_y, kmeans = get_clusters(y, predict=True, kmeans=kmeans, balanced=False)
 
 
-    plot_blobs(y, kmeans.cluster_centers_, cluster_ids_y, "unbalanced_clusters.pdf")
+    # plot_blobs(y, kmeans.cluster_centers_, cluster_ids_y, "unbalanced_clusters.pdf")
     cy = pd.Series(cluster_ids_y)
     cy = cy.value_counts().sort_index()
 

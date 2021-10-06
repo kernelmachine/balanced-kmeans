@@ -6,7 +6,7 @@ from tqdm import tqdm
 import pandas as pd
 from .soft_dtw_cuda import SoftDTW
 from scipy.optimize import linear_sum_assignment
-
+from balanced_assignment import auction_lap
 
 def initialize(X, num_clusters):
     """
@@ -34,7 +34,7 @@ def kmeans(
         num_clusters,
         distance='euclidean',
         cluster_centers=[],
-        tol=5e-3,
+        tol=5e-4,
         tqdm_flag=True,
         iter_limit=0,
         device=torch.device('cpu'),
@@ -93,26 +93,30 @@ def kmeans(
     iteration = 0
     if tqdm_flag:
         tqdm_meter = tqdm(desc='[running kmeans]')
-    cluster = torch.arange(num_clusters).repeat_interleave(X.shape[0] // num_clusters).to(device)
+    # cluster = torch.arange(num_clusters).repeat_interleave(X.shape[0] // num_clusters).to(device)
     done=False
     while True:
         if balanced:
-            distance_matrix = pairwise_distance_function(X, initial_state).repeat_interleave(X.shape[0] // num_clusters, 1)
+            distance_matrix = pairwise_distance_function(X, initial_state)
+            cluster_assignments = auction_lap(-distance_matrix)
+            # ?.repeat_interleave(X.shape[0] // num_clusters)
+            
             # SCIPY LINEAR ASSIGNMENT SOLVER
             # cluster_assignments = linear_sum_assignment(-distance_matrix.cpu().numpy(), maximize=True)[1] // (X.shape[0] // num_clusters)   
             # cluster_assignments = torch.IntTensor(cluster_assignments).cuda()
 
             ## BASE LAYER ASSIGNMENT
-            balanced_assignments = cpp.balanced_assignment(-distance_matrix.T)
-            cluster_assignments = cluster[balanced_assignments]
-# 
+            
+            # balanced_assignments = auction_lap(-distance_matrix)
+            # cluster_assignments = cluster[balanced_assignments]
+            # from fairseq import pdb; pdb.set_trace()
+
             
         else:
             dis = pairwise_distance_function(X, initial_state)
             cluster_assignments = torch.argmin(dis, dim=1)
         
         initial_state_pre = initial_state.clone()
-        
         for index in range(num_clusters):
             selected = torch.nonzero(cluster_assignments == index).squeeze().to(device)
 
@@ -184,9 +188,11 @@ def kmeans_predict(
 
     # transfer to device
     X = X.to(device)
-
-    dis = pairwise_distance_function(X, cluster_centers)
-    cluster_assignments = torch.argmin(dis, dim=1)
+    cpp = load_cpp()
+    distance_matrix = pairwise_distance_function(X, cluster_centers)
+    cluster_assignments = auction_lap(-distance_matrix)
+    # dis = pairwise_distance_function(X, cluster_centers)
+    # cluster_assignments = torch.argmin(dis, dim=1)
 
     return cluster_assignments.cpu()
 
