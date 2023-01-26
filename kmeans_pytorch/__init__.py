@@ -91,7 +91,7 @@ class KMeans(object):
     def load(cls, path_to_file):
         with open(path_to_file, 'rb') as f:
             saved = pickle.load(f)
-        return cls(saved['n_clusters'], saved['cluster_centers'], torch.device('cpu'), saved['balanced'])
+        return cls(saved.n_clusters, saved.cluster_centers, torch.device('cpu'), saved.balanced)
     
     def save(self, path_to_file):
         with open(path_to_file, 'wb+') as f :
@@ -281,7 +281,8 @@ class KMeans(object):
         X = X.float()
         # transfer to device
         balanced = False
-        X = X.to(self.device)
+        if self.device != torch.device('cpu'):
+            X = X.to(self.device)
         if balanced:
             distance_matrix = pairwise_distance_function(X, self.cluster_centers)
             cluster_assignments = auction_lap(-distance_matrix)
@@ -303,7 +304,8 @@ def pairwise_distance(data1, data2, device=torch.device('cpu'), tqdm_flag=True):
         # print(f'device is :{device}')
     
     # transfer to device
-    data1, data2 = data1.to(device), data2.to(device)
+    if device != torch.device('cpu'):
+        data1, data2 = data1.to(device), data2.to(device)
 
     # N*1*M
     A = data1.unsqueeze(dim=1)
