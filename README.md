@@ -43,6 +43,17 @@ cd kmeans_pytorch
 pip install --editable .
 ```
 
+install pytorch 
+
+```
+pip3 install torch==1.10.1+cu113 torchvision==0.11.2+cu113 torchaudio==0.10.1+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+```
+
+install additional dependencies
+
+```
+pip install matplotlib tqdm scikit-learn numba
+
 # CPU vs GPU
 see [`cpu_vs_gpu.ipynb`](https://github.com/subhadarship/kmeans_pytorch/blob/master/cpu_vs_gpu.ipynb) for a comparison between CPU and GPU
 

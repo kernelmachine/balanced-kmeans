@@ -3,16 +3,20 @@ from functools import partial
 import numpy as np
 import torch
 from tqdm.auto import tqdm
-import pandas as pd
 from .soft_dtw_cuda import SoftDTW
-from scipy.optimize import linear_sum_assignment
-# from balanced_assignment import auction_lap
 from sklearn.decomposition import PCA
 import pickle
 
 import torch
 
 def auction_lap(job_and_worker_to_score, return_token_to_worker=True):
+    """
+    Solving the balanced linear assignment problem with auction algorithm.
+    Arguments:
+        - job_and_worker_to_score -> N x M euclidean distances between N data points and M cluster centers
+    Returns:
+        - assignment -> balanced assignment between jobs and workers
+    """
     eps = (job_and_worker_to_score.max() - job_and_worker_to_score.min()) / 50
     eps.clamp_min_(1e-04)
     assert not torch.isnan(job_and_worker_to_score).any()
@@ -22,10 +26,16 @@ def auction_lap(job_and_worker_to_score, return_token_to_worker=True):
     num_workers, num_jobs = worker_and_job_to_score.size()
     jobs_per_worker = num_jobs // num_workers
     value = torch.clone(worker_and_job_to_score)
-    bids = torch.zeros((num_workers, num_jobs), dtype=worker_and_job_to_score.dtype, device=worker_and_job_to_score.device, requires_grad=False)
+    bids = torch.zeros((num_workers, num_jobs),
+                        dtype=worker_and_job_to_score.dtype,
+                        device=worker_and_job_to_score.device,
+                        requires_grad=False)
     counter = 0
     index = None
-    cost = torch.zeros((1,num_jobs,), dtype=worker_and_job_to_score.dtype, device=worker_and_job_to_score.device, requires_grad=False)
+    cost = torch.zeros((1,num_jobs,),
+                        dtype=worker_and_job_to_score.dtype,
+                        device=worker_and_job_to_score.device,
+                        requires_grad=False)
     while True:
         top_values, top_index = value.topk(jobs_per_worker + 1, dim=1)
         # Each worker bids the difference in value between that job and the k+1th job
@@ -81,7 +91,7 @@ def percentile(t, q):
     
 
 class KMeans(object):
-    def __init__(self, n_clusters=None, cluster_centers=None, device = torch.device('cpu'), balanced=False):
+    def __init__(self, n_clusters=None, cluster_centers=None, device=torch.device('cpu'), balanced=False):
         self.n_clusters = n_clusters
         self.cluster_centers = cluster_centers
         self.device = device
@@ -91,7 +101,7 @@ class KMeans(object):
     def load(cls, path_to_file):
         with open(path_to_file, 'rb') as f:
             saved = pickle.load(f)
-        return cls(saved.n_clusters, saved.cluster_centers, torch.device('cpu'), saved.balanced)
+        return cls(saved['n_clusters'], saved['cluster_centers'], torch.device('cpu'), saved['balanced'])
     
     def save(self, path_to_file):
         with open(path_to_file, 'wb+') as f :
@@ -155,37 +165,16 @@ class KMeans(object):
         # initialize
         if not online or (online and iter_k == 0):  # ToDo: make this less annoyingly weird
             self.cluster_centers = self.initialize(X)
-            # initial_state = self.cluster_centers
-        # else:
-            # if tqdm_flag:
-            #     print('resuming')
-            # find data point closest to the initial cluster center
-            # initial_state = self.cluster_centers
-            # dis = pairwise_distance_function(X, initial_state)
-            
-            
-            # # choice_points = torch.argmin(dis, dim=0)
-            # initial_state = X[choice_points]
-            # initial_state = initial_state.to(self.device)
             
 
         iteration = 0
         if tqdm_flag:
             tqdm_meter = tqdm(desc='[running kmeans]')
-        # cluster = torch.arange(n_clusters).repeat_interleave(X.shape[0] // n_clusters).to(device)
         done=False
         while True:
             if self.balanced:
                 distance_matrix = pairwise_distance_function(X, self.cluster_centers)
-                # far_away_points = torch.where(distance_matrix > percentile(distance_matrix, 90))[0]
-                # close_points = torch.where(distance_matrix < percentile(distance_matrix, 90))[0]
-                # cluster_assignments_1 = torch.argmin(distance_matrix[close_points, :], dim=1)
                 cluster_assignments = auction_lap(-distance_matrix)
-                
-                # SCIPY LINEAR ASSIGNMENT SOLVER
-                # cluster_assignments = linear_sum_assignment(-distance_matrix.cpu().numpy(), maximize=True)[1] // (X.shape[0] // self.n_clusters)   
-                # cluster_assignments = torch.IntTensor(cluster_assignments).cuda()
-
             else:
                 dis = pairwise_distance_function(X, self.cluster_centers)
                 cluster_assignments = torch.argmin(dis, dim=1)
@@ -223,8 +212,6 @@ class KMeans(object):
             if iter_limit != 0 and iteration >= iter_limit:
                 break
         
-        # cluster_assignments = auction_lap(-dis)
-
         return cluster_assignments.cpu()
 
 
@@ -286,8 +273,6 @@ class KMeans(object):
         if balanced:
             distance_matrix = pairwise_distance_function(X, self.cluster_centers)
             cluster_assignments = auction_lap(-distance_matrix)
-            # cluster_assignments = linear_sum_assignment(-distance_matrix.cpu().numpy(), maximize=True)[1] // (X.shape[0] // self.n_clusters) 
-            # cluster_assignments = torch.IntTensor(cluster_assignments).cuda()
         else:
             distance_matrix = pairwise_distance_function(X, self.cluster_centers)
             cluster_assignments = torch.argmin(distance_matrix, dim=1 if len(distance_matrix.shape) > 1 else 0)
@@ -300,9 +285,6 @@ class KMeans(object):
 
 
 def pairwise_distance(data1, data2, device=torch.device('cpu'), tqdm_flag=True):
-    # if tqdm_flag:
-        # print(f'device is :{device}')
-    
     # transfer to device
     if device != torch.device('cpu'):
         data1, data2 = data1.to(device), data2.to(device)
