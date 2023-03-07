@@ -1,70 +1,38 @@
-# K Means using PyTorch
-PyTorch implementation of kmeans for utilizing GPU
+# Balanced K-Means using PyTorch
 
-![Alt Text](https://media.giphy.com/media/WsYIwIHHXUcuiR8BeS/giphy.gif)
-
-# Getting Started
-```
-
-import torch
-import numpy as np
-from kmeans_pytorch import kmeans
-
-# data
-data_size, dims, num_clusters = 1000, 2, 3
-x = np.random.randn(data_size, dims) / 6
-x = torch.from_numpy(x)
-
-# kmeans
-cluster_ids_x, cluster_centers = kmeans(
-    X=x, num_clusters=num_clusters, distance='euclidean', device=torch.device('cuda:0')
-)
-```
-
-see [`example.ipynb`](https://github.com/subhadarship/kmeans_pytorch/blob/master/example.ipynb) for a more elaborate example
+PyTorch implementation of balanced kmeans. Based on https://github.com/subhadarship/kmeans_pytorch
 
 # Requirements
 * [PyTorch](http://pytorch.org/) version >= 1.0.0
 * Python version >= 3.6
 
-# Installation
-
-install with `pip`:
-```
-pip install kmeans-pytorch
-```
-
-**Installing from source**
+# Installing from source
 
 To install from source and develop locally:
 ```
-git clone https://github.com/subhadarship/kmeans_pytorch
-cd kmeans_pytorch
+git clone https://github.com/kernelmachine/balanced-kmeans/
+cd balanced-kmeans
 pip install --editable .
 ```
 
-install pytorch 
+Install pytorch 
 
 ```
 pip3 install torch==1.10.1+cu113 torchvision==0.11.2+cu113 torchaudio==0.10.1+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
 ```
 
-install additional dependencies
+Install additional dependencies
 
 ```
 pip install matplotlib tqdm scikit-learn numba
+```
 
-# CPU vs GPU
-see [`cpu_vs_gpu.ipynb`](https://github.com/subhadarship/kmeans_pytorch/blob/master/cpu_vs_gpu.ipynb) for a comparison between CPU and GPU
+# Run example
 
-# Notes
-- useful when clustering large number of samples
-- utilizes GPU for faster matrix computations
-- support euclidean and cosine distances (for now)
+This will output a plot of clusters in a pdf file.
 
-# Credits
-- This implementation closely follows the style of [this](https://github.com/overshiki/kmeans_pytorch)
-- Documentation is done using the awesome theme [jekyllbook](https://github.com/ebetica/jekyllbook)
+```
+python cluster.py
+```
 
-# License
-[MIT](https://github.com/subhadarship/kmeans_pytorch/blob/master/LICENSE)
+You can check out the notebook `example.ipynb` as well.
