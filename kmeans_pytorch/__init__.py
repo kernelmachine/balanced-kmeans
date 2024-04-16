@@ -242,7 +242,8 @@ class KMeans(object):
             distance='euclidean',
             gamma_for_soft_dtw=0.001,
             tqdm_flag=False,
-            return_distances=False
+            return_distances=False,
+            balanced=False
     ):
         """
         predict using cluster centers
@@ -267,7 +268,6 @@ class KMeans(object):
         # convert to float
         X = X.float()
         # transfer to device
-        balanced = False
         if self.device != torch.device('cpu'):
             X = X.to(self.device)
         if balanced:
